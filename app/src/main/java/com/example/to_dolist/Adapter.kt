@@ -5,9 +5,12 @@ import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 
 
-class Adapter(val lists : ArrayList<TaskList>) : RecyclerView.Adapter<Viewholder>() {
+class Adapter(private val lists : ArrayList<TaskList>, private val clickListener: TodoListClickListener) : RecyclerView.Adapter<Viewholder>() {
 
+    interface TodoListClickListener{
 
+        fun listItemClicked(list: TaskList)
+    }
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): Viewholder {
 
         val view = LayoutInflater.from(parent.context).inflate(R.layout.todo_list_viewholder,parent,false)
@@ -18,6 +21,10 @@ class Adapter(val lists : ArrayList<TaskList>) : RecyclerView.Adapter<Viewholder
 
         holder.listPositionTextView.text = (position + 1).toString()
         holder.listTitleTextView.text = lists[position].name
+
+        holder.itemView.setOnClickListener{
+            clickListener.listItemClicked(lists[position])
+        }
     }
 
     override fun getItemCount(): Int {

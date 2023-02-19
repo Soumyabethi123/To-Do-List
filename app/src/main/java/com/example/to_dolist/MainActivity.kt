@@ -1,5 +1,6 @@
 package com.example.to_dolist
 
+import android.content.Intent
 import android.os.Bundle
 import android.text.InputType
 import androidx.appcompat.app.AppCompatActivity
@@ -12,27 +13,26 @@ import androidx.recyclerview.widget.RecyclerView
 import com.example.to_dolist.databinding.ActivityMainBinding
 
 
-class MainActivity : AppCompatActivity() {
+class MainActivity : AppCompatActivity() , TodoListFragment.OnFragmentInteractionListener{
 
-    lateinit var todoRecyclerView: RecyclerView
+
     lateinit var binding: ActivityMainBinding
 
-    val listDataManager : ListDataManager = ListDataManager(this)
+    private var todoListFragment = TodoListFragment.newInstance()
+
+    companion object{
+        const val INTENT_LIST_KEY = "list"
+        const val LIST_DETAIL_REQUEST_CODE = 123
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        val lists = listDataManager.readList()
 
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
         setSupportActionBar(binding.toolbar)
-
-        todoRecyclerView=findViewById(R.id.list_recyclerview)
-
-        todoRecyclerView.layoutManager=LinearLayoutManager(this)
-        todoRecyclerView.adapter=Adapter(lists)
 
         binding.fab.setOnClickListener { view ->
 
@@ -69,16 +69,40 @@ class MainActivity : AppCompatActivity() {
         mydialog.setView(message)
         mydialog.setPositiveButton(positivebutton){
             dialog,_ ->
-
-            val adapter = todoRecyclerView.adapter as Adapter
             val list = TaskList(message.text.toString())
-
-            listDataManager.SaveList(list)
-            adapter.add(list)
-
+            todoListFragment.addList(list)
             dialog.dismiss()
+            showTaskList(list)
         }
         mydialog.create().show()
 
+    }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+
+        if(requestCode == LIST_DETAIL_REQUEST_CODE){
+
+            data?.let{
+
+                val list = data.getParcelableExtra<TaskList>(INTENT_LIST_KEY)!!
+                todoListFragment.saveList(list)
+            }
+        }
+    }
+
+
+
+    private fun showTaskList(list : TaskList){
+
+        val taskListItem = Intent(this,DetailActivity::class.java)
+        taskListItem.putExtra(INTENT_LIST_KEY,list)
+        startActivityForResult(taskListItem, LIST_DETAIL_REQUEST_CODE)
+
+    }
+
+    override fun onTodoListClicked(list: TaskList) {
+
+        showTaskList(list)
     }
 }
